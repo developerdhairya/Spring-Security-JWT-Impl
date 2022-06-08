@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tech.developerdhairya.securityclient.Entity.UserEntity;
+import tech.developerdhairya.securityclient.Entity.VerificationToken;
 import tech.developerdhairya.securityclient.Model.UserRegistration;
 import tech.developerdhairya.securityclient.Repository.UserRepository;
 import tech.developerdhairya.securityclient.ResponseModel.UseRegistrationRes;
@@ -19,7 +20,7 @@ public class UserServiceImpl implements UserService{
 
 
     @Override
-    public boolean registerUser(UserRegistration userRegistration) {
+    public UserEntity registerUser(UserRegistration userRegistration) {
 
 
         String password=userRegistration.getPassword();
@@ -32,7 +33,12 @@ public class UserServiceImpl implements UserService{
         userEntity.setRole("USER");
         userEntity.setPassword(encodedPassword);
 
-        userRepository.save(userEntity);
-        return true;
+        return userRepository.save(userEntity);
+
+    }
+
+    @Override
+    public void saveUserVerfificationToken(String token, UserEntity userEntity) {
+        VerificationToken verificationToken=new VerificationToken(token,userEntity);
     }
 }

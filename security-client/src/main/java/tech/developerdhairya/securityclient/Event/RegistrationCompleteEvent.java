@@ -1,15 +1,24 @@
 package tech.developerdhairya.securityclient.Event;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.context.ApplicationEvent;
+import tech.developerdhairya.securityclient.Entity.UserEntity;
 
 import java.time.Clock;
 
+@Getter @Setter
 public class RegistrationCompleteEvent extends ApplicationEvent {
-    public RegistrationCompleteEvent(Object source) {
-        super(source);
+
+    private UserEntity userEntity;
+    private String applicationUrl;
+
+    public RegistrationCompleteEvent(UserEntity userEntity,String applicationUrl) {
+        super(userEntity);
+        this.userEntity=userEntity;
+        this.applicationUrl=applicationUrl;
     }
 
-    public RegistrationCompleteEvent(Object source, Clock clock) {
-        super(source, clock);
-    }
+
+
 }
