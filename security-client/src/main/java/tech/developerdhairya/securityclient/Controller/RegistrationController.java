@@ -5,8 +5,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.bind.annotation.*;
 import tech.developerdhairya.securityclient.Entity.UserEntity;
 import tech.developerdhairya.securityclient.Event.RegistrationCompleteEvent;
+import tech.developerdhairya.securityclient.Model.ChangePassword;
 import tech.developerdhairya.securityclient.Model.UserRegistration;
-import tech.developerdhairya.securityclient.Service.UserService;
 import tech.developerdhairya.securityclient.Service.UserServiceImpl;
 import tech.developerdhairya.securityclient.Util.AuthenticationUtil;
 
@@ -40,6 +40,11 @@ public class RegistrationController {
     @GetMapping("/resendVerificationToken")
     public String resendVerificationToken(@RequestParam("email") String email){
         return userService.resendVerificationToken(email);
+    }
+
+    @PostMapping("/resetPassword")
+    public String resetPassword(@RequestBody ChangePassword changePassword){
+        return userService.resetPassword(changePassword);
     }
 
 //    @GetMapping("/resetPassword")
