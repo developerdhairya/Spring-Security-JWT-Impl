@@ -1,20 +1,29 @@
 package tech.developerdhairya.securityclient.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tech.developerdhairya.securityclient.Entity.UserEntity;
-import tech.developerdhairya.securityclient.Entity.VerificationToken;
+import tech.developerdhairya.securityclient.Entity.VerificationTokenEntity;
 import tech.developerdhairya.securityclient.Model.UserRegistration;
 import tech.developerdhairya.securityclient.Repository.UserRepository;
-import tech.developerdhairya.securityclient.ResponseModel.UseRegistrationRes;
+import tech.developerdhairya.securityclient.Repository.VerificationTokenRepository;
+
+import java.util.Calendar;
 
 
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private VerificationTokenRepository verificationTokenRepository;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -27,8 +36,8 @@ public class UserServiceImpl implements UserService{
         String encodedPassword=passwordEncoder.encode(password);
 
         UserEntity userEntity=new UserEntity();
-        userEntity.setFirstname(userRegistration.getFirstname());
-        userEntity.setLastName(userRegistration.getLastname());
+        userEntity.setFirstName(userRegistration.getFirstName());
+        userEntity.setLastName(userRegistration.getLastName());
         userEntity.setEmail(userRegistration.getEmail());
         userEntity.setRole("USER");
         userEntity.setPassword(encodedPassword);
@@ -39,6 +48,32 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public void saveUserVerfificationToken(String token, UserEntity userEntity) {
-        VerificationToken verificationToken=new VerificationToken(token,userEntity);
+        VerificationTokenEntity verificationTokenEntity =new VerificationTokenEntity(token,userEntity);
+        verificationTokenRepository.save(verificationTokenEntity);
+
     }
+
+    public String validateVerificationToken(String token){
+        VerificationTokenEntity verificationTokenEntity=verificationTokenRepository.findByToken(token);
+        if(verificationTokenEntity==null){
+            return "Verification token is Invalid";
+        }else {
+            UserEntity userEntity=verificationTokenEntity.getUserEntity();
+            Calendar calendar=Calendar.getInstance();
+
+            if(verificationTokenEntity.getExpirationTime().getTime()-calendar.getTime().getTime()>=0){
+                userEntity.setEnabled(true);
+                userRepository.save(userEntity);
+                return "User validation Successful";
+            }
+            verificationTokenRepository.delete(verificationTokenEntity);
+            return "Token is expired";
+        }
+    }
+
+
+//    @Override
+//    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+//        return null;
+//    }
 }

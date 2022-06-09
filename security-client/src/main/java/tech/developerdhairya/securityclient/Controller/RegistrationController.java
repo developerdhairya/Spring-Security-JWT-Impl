@@ -2,29 +2,47 @@ package tech.developerdhairya.securityclient.Controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import tech.developerdhairya.securityclient.Entity.UserEntity;
 import tech.developerdhairya.securityclient.Event.RegistrationCompleteEvent;
 import tech.developerdhairya.securityclient.Model.UserRegistration;
-import tech.developerdhairya.securityclient.ResponseModel.UseRegistrationRes;
 import tech.developerdhairya.securityclient.Service.UserService;
+import tech.developerdhairya.securityclient.Service.UserServiceImpl;
+
+import javax.servlet.http.HttpServletRequest;
 
 @RestController
 public class RegistrationController {
 
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userService;
 
     @Autowired
     private ApplicationEventPublisher publisher;
 
     @PostMapping("/register")
-    public boolean registerUser(@RequestBody UserRegistration registration){
+    public boolean registerUser(@RequestBody UserRegistration registration, HttpServletRequest httpServletRequest){
         UserEntity user=userService.registerUser(registration);
-        publisher.publishEvent(new RegistrationCompleteEvent(user,""));
+        publisher.publishEvent(new RegistrationCompleteEvent(user,getApplicationUrl(httpServletRequest)));
         return true;
     }
+
+
+    @GetMapping("/verifyRegistration")
+    public String verifyRegistration(@RequestParam("token") String token){
+        return userService.validateVerificationToken(token);
+    }
+
+    @GetMapping("/test")
+    public String test(){
+        return "11";
+    }
+
+
+    private String getApplicationUrl(HttpServletRequest httpServletRequest){
+        System.out.println(httpServletRequest.getServletPath().toString());;
+        return "http://"+httpServletRequest.getServerName()+":"+httpServletRequest.getServerPort()+"/"+httpServletRequest.getContextPath();
+    }
+
 
 }

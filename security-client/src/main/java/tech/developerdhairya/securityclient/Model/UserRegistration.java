@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @Data @NoArgsConstructor @AllArgsConstructor
 public class UserRegistration {
 
-    private String firstname;
-    private String lastname;
+    private String firstName;
+    private String lastName;
     private String email;
     private String password;
     private String confirmPassword;

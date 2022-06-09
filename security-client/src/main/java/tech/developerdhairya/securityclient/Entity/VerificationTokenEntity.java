@@ -8,25 +8,19 @@ import java.util.Calendar;
 import java.util.Date;
 
 @Entity @Data @NoArgsConstructor
-public class VerificationToken {
+public class VerificationTokenEntity {
 
-    public VerificationToken(String token, UserEntity userEntity) {
+    public VerificationTokenEntity(String token, UserEntity userEntity) {
         this.token = token;
         this.userEntity = userEntity;
         this.expirationTime=calculateExpirationTime(EXPIRATION_TIME);
     }
 
-    public VerificationToken(String token) {
-        this.token = token;
-        this.expirationTime = calculateExpirationTime(EXPIRATION_TIME);
-    }
 
     private Date calculateExpirationTime(int expirationTime){
         Calendar calendar=Calendar.getInstance();
-        //Setting calender time
-        calendar.setTimeInMillis(new Date().getTime());
-        //Adding EXPIRATION_TIME to total time
-        calendar.add(Calendar.MINUTE,expirationTime);
+        calendar.setTimeInMillis(new Date().getTime());       //Setting calender time
+        calendar.add(Calendar.MINUTE,expirationTime);        //Adding EXPIRATION_TIME to total time
         return calendar.getTime();
     }
 
