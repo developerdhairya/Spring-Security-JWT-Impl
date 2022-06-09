@@ -33,7 +33,7 @@ public class RegistrationController {
         return userService.validateVerificationToken(token);
     }
 
-    @GetMapping("/test")
+    @GetMapping("/resendVerificationToken")
     public String test(){
         return "11";
     }

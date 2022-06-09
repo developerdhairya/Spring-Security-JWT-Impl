@@ -13,6 +13,7 @@ import tech.developerdhairya.securityclient.Repository.UserRepository;
 import tech.developerdhairya.securityclient.Repository.VerificationTokenRepository;
 
 import java.util.Calendar;
+import java.util.UUID;
 
 
 @Service
@@ -69,6 +70,21 @@ public class UserServiceImpl implements UserService {
             verificationTokenRepository.delete(verificationTokenEntity);
             return "Token is expired";
         }
+    }
+
+    public String resendVerificationToken(String email){
+        UserEntity userEntity=userRepository.findByEmail(email);
+        VerificationTokenEntity token=verificationTokenRepository.findByUserId(userEntity.getId());
+        Calendar calendar=Calendar.getInstance();
+        if(token.getExpirationTime().getTime()<calendar.getTime().getTime()){
+            token.setExpirationTime(calendar.getTime());
+            verificationTokenRepository.save(token);
+            //mail to user the token
+            return "Token has been sent to your registered email ID";
+        }
+        VerificationTokenEntity verificationToken=new VerificationTokenEntity(UUID.randomUUID().toString(),userEntity);
+        verificationTokenRepository.save(verificationToken);
+        return "Success";
     }
 
 
