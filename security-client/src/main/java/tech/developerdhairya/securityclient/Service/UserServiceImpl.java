@@ -1,9 +1,6 @@
 package tech.developerdhairya.securityclient.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tech.developerdhairya.securityclient.Entity.UserEntity;
@@ -11,6 +8,7 @@ import tech.developerdhairya.securityclient.Entity.VerificationTokenEntity;
 import tech.developerdhairya.securityclient.Model.UserRegistration;
 import tech.developerdhairya.securityclient.Repository.UserRepository;
 import tech.developerdhairya.securityclient.Repository.VerificationTokenRepository;
+import tech.developerdhairya.securityclient.Util.AuthenticationUtil;
 
 import java.util.Calendar;
 import java.util.UUID;
@@ -26,43 +24,42 @@ public class UserServiceImpl implements UserService {
     private VerificationTokenRepository verificationTokenRepository;
 
     @Autowired
+    private AuthenticationUtil util;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
 
     @Override
     public UserEntity registerUser(UserRegistration userRegistration) {
+        String password = userRegistration.getPassword();
+        String encodedPassword = passwordEncoder.encode(password);
 
-
-        String password=userRegistration.getPassword();
-        String encodedPassword=passwordEncoder.encode(password);
-
-        UserEntity userEntity=new UserEntity();
+        UserEntity userEntity = new UserEntity();
         userEntity.setFirstName(userRegistration.getFirstName());
         userEntity.setLastName(userRegistration.getLastName());
         userEntity.setEmail(userRegistration.getEmail());
         userEntity.setRole("USER");
         userEntity.setPassword(encodedPassword);
-
         return userRepository.save(userEntity);
 
     }
 
     @Override
     public void saveUserVerfificationToken(String token, UserEntity userEntity) {
-        VerificationTokenEntity verificationTokenEntity =new VerificationTokenEntity(token,userEntity);
+        VerificationTokenEntity verificationTokenEntity = new VerificationTokenEntity(token, userEntity);
         verificationTokenRepository.save(verificationTokenEntity);
 
     }
 
-    public String validateVerificationToken(String token){
-        VerificationTokenEntity verificationTokenEntity=verificationTokenRepository.findByToken(token);
-        if(verificationTokenEntity==null){
+    public String validateVerificationToken(String token) {
+        VerificationTokenEntity verificationTokenEntity = verificationTokenRepository.findByToken(token);
+        if (verificationTokenEntity == null) {
             return "Verification token is Invalid";
-        }else {
-            UserEntity userEntity=verificationTokenEntity.getUserEntity();
-            Calendar calendar=Calendar.getInstance();
-
-            if(verificationTokenEntity.getExpirationTime().getTime()-calendar.getTime().getTime()>=0){
+        } else {
+            UserEntity userEntity = verificationTokenEntity.getUserEntity();
+            Calendar calendar = Calendar.getInstance();
+            if (verificationTokenEntity.getExpirationTime().getTime() - calendar.getTime().getTime() >= 0) {
                 userEntity.setEnabled(true);
                 userRepository.save(userEntity);
                 return "User validation Successful";
@@ -72,24 +69,23 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public String resendVerificationToken(String email){
-        UserEntity userEntity=userRepository.findByEmail(email);
-        VerificationTokenEntity token=verificationTokenRepository.findByUserId(userEntity.getId());
-        Calendar calendar=Calendar.getInstance();
-        if(token.getExpirationTime().getTime()<calendar.getTime().getTime()){
+    public String resendVerificationToken(String email) {
+        UserEntity userEntity = userRepository.findByEmail(email);
+        if (userEntity.isEnabled()) {
+            return "Invalid Request";
+        }
+        VerificationTokenEntity token = verificationTokenRepository.findByUserEntity(userEntity);
+        if (!util.checkTokenExpiry(token)) {
+            Calendar calendar = Calendar.getInstance();
             token.setExpirationTime(calendar.getTime());
             verificationTokenRepository.save(token);
             //mail to user the token
             return "Token has been sent to your registered email ID";
         }
-        VerificationTokenEntity verificationToken=new VerificationTokenEntity(UUID.randomUUID().toString(),userEntity);
+        VerificationTokenEntity verificationToken = new VerificationTokenEntity(UUID.randomUUID().toString(), userEntity);
         verificationTokenRepository.save(verificationToken);
         return "Success";
     }
 
 
-//    @Override
-//    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-//        return null;
-//    }
 }

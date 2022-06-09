@@ -8,6 +8,7 @@ import tech.developerdhairya.securityclient.Event.RegistrationCompleteEvent;
 import tech.developerdhairya.securityclient.Model.UserRegistration;
 import tech.developerdhairya.securityclient.Service.UserService;
 import tech.developerdhairya.securityclient.Service.UserServiceImpl;
+import tech.developerdhairya.securityclient.Util.AuthenticationUtil;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -20,10 +21,13 @@ public class RegistrationController {
     @Autowired
     private ApplicationEventPublisher publisher;
 
+    @Autowired
+    private AuthenticationUtil util;
+
     @PostMapping("/register")
     public boolean registerUser(@RequestBody UserRegistration registration, HttpServletRequest httpServletRequest){
         UserEntity user=userService.registerUser(registration);
-        publisher.publishEvent(new RegistrationCompleteEvent(user,getApplicationUrl(httpServletRequest)));
+        publisher.publishEvent(new RegistrationCompleteEvent(user,util.getApplicationUrl(httpServletRequest)));
         return true;
     }
 
@@ -34,15 +38,15 @@ public class RegistrationController {
     }
 
     @GetMapping("/resendVerificationToken")
-    public String test(){
-        return "11";
+    public String resendVerificationToken(@RequestParam("email") String email){
+        return userService.resendVerificationToken(email);
     }
 
+//    @GetMapping("/resetPassword")
+//    public String resetPassword(@RequestBody)
 
-    private String getApplicationUrl(HttpServletRequest httpServletRequest){
-        System.out.println(httpServletRequest.getServletPath().toString());;
-        return "http://"+httpServletRequest.getServerName()+":"+httpServletRequest.getServerPort()+"/"+httpServletRequest.getContextPath();
-    }
+
+
 
 
 }

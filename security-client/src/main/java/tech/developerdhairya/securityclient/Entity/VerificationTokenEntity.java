@@ -2,6 +2,8 @@ package tech.developerdhairya.securityclient.Entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import tech.developerdhairya.securityclient.Util.AuthenticationUtil;
 
 import javax.persistence.*;
 import java.util.Calendar;
@@ -10,24 +12,17 @@ import java.util.Date;
 @Entity @Data @NoArgsConstructor
 public class VerificationTokenEntity {
 
+    @Autowired
+    private static final int EXPIRATION_TIME=10;
+    private static AuthenticationUtil util;
+
+
     public VerificationTokenEntity(String token, UserEntity userEntity) {
         this.token = token;
         this.userEntity = userEntity;
-        this.expirationTime=calculateExpirationTime(EXPIRATION_TIME);
+        this.expirationTime=util.calculateExpirationTime(EXPIRATION_TIME);
     }
 
-
-    private Date calculateExpirationTime(int expirationTime){
-        Calendar calendar=Calendar.getInstance();
-        calendar.setTimeInMillis(new Date().getTime());       //Setting calender time
-        calendar.add(Calendar.MINUTE,expirationTime);        //Adding EXPIRATION_TIME to total time
-        return calendar.getTime();
-    }
-
-    private static final int EXPIRATION_TIME=10;
-
-
-    //Entity Fields
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
