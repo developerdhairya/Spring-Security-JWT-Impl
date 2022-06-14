@@ -26,7 +26,7 @@ public class AuthenticationUtil {
 
     public boolean checkTokenExpiry(VerificationTokenEntity token){
         Calendar calendar=Calendar.getInstance();
-        return token.getExpirationTime().getTime()>calendar.getTime().getTime();
+        return token.getExpirationTime().getTime()<calendar.getTime().getTime();
     }
 
 }

@@ -1,10 +1,6 @@
 package tech.developerdhairya.securityclient.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tech.developerdhairya.securityclient.Entity.UserEntity;
@@ -15,8 +11,6 @@ import tech.developerdhairya.securityclient.Repository.UserRepository;
 import tech.developerdhairya.securityclient.Repository.VerificationTokenRepository;
 import tech.developerdhairya.securityclient.Util.AuthenticationUtil;
 
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.UUID;
 
 
@@ -58,50 +52,63 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    //enable user
     public String validateVerificationToken(String token) {
         VerificationTokenEntity verificationTokenEntity = verificationTokenRepository.findByToken(token);
         if (verificationTokenEntity == null) {
             return "Verification token is Invalid";
-        } else {
-            UserEntity userEntity = verificationTokenEntity.getUserEntity();
-            Calendar calendar = Calendar.getInstance();
-            if (verificationTokenEntity.getExpirationTime().getTime() - calendar.getTime().getTime() >= 0) {
-                userEntity.setEnabled(true);
-                userRepository.save(userEntity);
-                return "User validation Successful";
-            }
-            verificationTokenRepository.delete(verificationTokenEntity);
+        }
+
+        if (util.checkTokenExpiry(verificationTokenEntity)) {
             return "Token is expired";
         }
+
+
+        UserEntity userEntity = verificationTokenEntity.getUserEntity();
+        userEntity.setEnabled(true);
+        userRepository.save(userEntity);
+        verificationTokenRepository.delete(verificationTokenEntity);
+        return "User validation Successful";
+
     }
+
 
     public String resendVerificationToken(String email) {
         UserEntity userEntity = userRepository.findByEmail(email);
+        if (userEntity == null) {
+            return "No user exists with the given email-address";
+        }
         if (userEntity.isEnabled()) {
-            return "Invalid Request";
+            return "User has already been verified";
         }
         VerificationTokenEntity token = verificationTokenRepository.findByUserEntity(userEntity);
+
         if (!util.checkTokenExpiry(token)) {
-            Calendar calendar = Calendar.getInstance();
-            token.setExpirationTime(calendar.getTime());
-            verificationTokenRepository.save(token);
-            //mail to user the token
-            return "Token has been sent to your registered email ID";
+            //DO mail user the same token
+            return "The token has been resent to your registered email id";
         }
-        VerificationTokenEntity verificationToken = new VerificationTokenEntity(UUID.randomUUID().toString(), userEntity);
-        verificationTokenRepository.save(verificationToken);
-        return "Success";
+
+        //delete expired token
+        verificationTokenRepository.delete(token);
+
+        //create new token
+        VerificationTokenEntity newToken = new VerificationTokenEntity(UUID.randomUUID().toString(), userEntity);
+        verificationTokenRepository.save(newToken);
+
+        //DO mail user the newly generated token.
+
+        return "New Token has been sent to your registered email ID";
     }
 
 
     public String resetPassword(ChangePassword changePassword) {
-        if(!changePassword.getCurrentPassword().equals(changePassword.getConfirmCurrentPassword())){
+        if (!changePassword.getCurrentPassword().equals(changePassword.getConfirmCurrentPassword())) {
             return "Passwords dont match";
         }
-        String currentEncodedPassword=passwordEncoder.encode(changePassword.getCurrentPassword());
-        UserEntity userEntity=userRepository.findByEmail(changePassword.getEmail());
-        if(userEntity.getPassword().equals(currentEncodedPassword)){
-            String newEncodedPassword=passwordEncoder.encode(changePassword.getCurrentPassword());
+        String currentEncodedPassword = passwordEncoder.encode(changePassword.getCurrentPassword());
+        UserEntity userEntity = userRepository.findByEmail(changePassword.getEmail());
+        if (userEntity.getPassword().equals(currentEncodedPassword)) {
+            String newEncodedPassword = passwordEncoder.encode(changePassword.getCurrentPassword());
             userEntity.setPassword(newEncodedPassword);
             userRepository.save(userEntity);
             return "Success";

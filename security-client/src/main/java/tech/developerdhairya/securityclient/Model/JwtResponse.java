@@ -2,8 +2,9 @@ package tech.developerdhairya.securityclient.Model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Data @AllArgsConstructor
+@Data @AllArgsConstructor @NoArgsConstructor
 public class JwtResponse {
 
     private String jwt;
